@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    container_name: todo_dev
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/app
+      # THE TRICK: Mask Windows .venv with a Linux volume
+      - /app/.venv
+    environment:
+      - UV_PROJECT_ENVIRONMENT=/app/.venv
+    # Startup Command:
+    # 1. uv sync: Installs linux libs (python-fasthtml)
+    # 2. python main.py: FastHTML's serve() starts the server
+    command: sh -c "uv sync && uv run python main.py"
