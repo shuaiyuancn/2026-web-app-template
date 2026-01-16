@@ -16,3 +16,5 @@ wheels/
 todos.db
 todos.db-shm
 todos.db-wal
+
+.env.development.local
