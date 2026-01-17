@@ -17,48 +17,60 @@ This document defines the operational context and workflow for this project. It 
 *   **Web Framework:** [FastHTML](https://fastht.ml/) (Hypermedia-driven UI).
 *   **Database:** PostgreSQL (Production) / `psycopg2` driver.
     *   **ORM:** [FastSQL](https://github.com/AnswerDotAI/fastsql) (SQLAlchemy wrapper).
+*   **UI Framework:** Materialize CSS (via CDN).
 *   **Package Manager:** [uv](https://github.com/astral-sh/uv) (Managed via `pyproject.toml` and `uv.lock`).
 *   **Deployment:** Vercel (Serverless).
 
-## 3. Development Workflow
+## 3. Development Guidelines (Lessons Learned)
 
-### A. dependency Management
+### A. FastSQL & Models
+*   **Dataclasses:** All models MUST be defined as `@dataclass`.
+*   **Primary Keys:** If the DB schema has an `id` column, the Python model SHOULD include `id: Optional[int] = None` to allow deletion/updates by ID.
+*   **Table Names:** FastSQL defaults to **singular** table names (e.g., `user`, `cost`). Use singular names in raw SQL queries.
+*   **Decimal Types:** When rendering `Decimal` values in f-strings, explicit casting is required (e.g., `f"{float(amount):.2f}"`) to avoid `ValueError`.
+
+### B. Vercel & Environment
+*   **Read-Only Filesystem:** Vercel functions are read-only (except `/tmp`). `FastHTML` tries to write `.sesskey` by default.
+    *   **Fix:** Always pass `secret_key` to `fast_app()`. Read it from `AUTH_SECRET` env var.
+*   **Environment Variables:**
+    *   `.env` files are **ignored** by Vercel deployment.
+    *   **DATABASE_URL:** Must be set in Vercel Project Settings.
+    *   **AUTH_SECRET:** Must be set in Vercel Project Settings.
+
+### C. UI & Forms
+*   **Materialize Select:** Hides the native `<select>` element. Standard HTML5 `required` validation will block submission without feedback.
+    *   **Fix:** Do not use `required=True` on `Select` components if using Materialize. Validate on backend.
+
+## 4. Development Workflow
+
+### A. Dependency Management
 *   The `uv.lock` file is the source of truth.
 *   **To Add a Library:**
     1.  Run `uv add <package>` on the **Windows Host** (PowerShell).
-    2.  Restart the container (`podman-compose restart web`) or run `uv sync` inside the container to apply changes.
+    2.  Restart the container (`podman-compose restart web`) or run `uv sync` inside the container.
 
 ### B. Running the App
 *   **Start:** `podman-compose up -d`
-*   **Stop:** `podman-compose down`
-*   **Logs:** `podman logs -f todo_dev`
-*   **Access:** Open `http://localhost:5001` in the browser.
+*   **Logs:** `podman logs -f palpay_dev`
+*   **Access:** Open `http://localhost:5001`.
 
 ### C. Testing
-*   Tests must run **inside** the Linux container to match the production environment.
-*   **Command:** `podman exec todo_dev uv run pytest`
+*   Tests must run **inside** the Linux container.
+*   **Command:** `podman exec palpay_dev uv run pytest`
 
-### D. Database & Environment
-*   **Local Default:** `compose.yaml` defaults to a local Postgres container (`db:5432`).
-*   **Remote Testing:**
-    1.  Uncomment `DATABASE_URL` in `.env`.
-    2.  Set it to the remote Supabase/Postgres URL (Must start with `postgresql://`).
-    3.  Restart the container.
-    4.  **WARNING:** Do not commit `.env` with real credentials.
+## 5. Deployment Checklist (Vercel)
 
-## 4. Deployment (Vercel)
+1.  **Push to GitHub.**
+2.  **Vercel Settings:**
+    *   Set `DATABASE_URL` (Remote Postgres, e.g., Supabase/Neon).
+    *   Set `AUTH_SECRET` (Random string for session signing).
+    *   Set `POSTGRES_URL_NON_POOLING` if applicable.
+3.  **Deploy.**
 
-*   **Config:** `vercel.json` maps the Python runtime.
-*   **Command:** `vercel --prod`
-*   **Environment Variables:**
-    *   Set `POSTGRES_URL_NON_POOLING` in Vercel Project Settings for the database connection.
-    *   Ensure the URL protocol is `postgresql://` (replace `postgres://` if copying from Supabase).
-
-## 5. Agent Instructions
+## 6. Agent Instructions
 
 When asked to implement features:
 1.  **Verify First:** Check `podman ps` to ensure the environment is active.
 2.  **Edit on Host:** specific file paths `C:\workspace\...`.
 3.  **Run in Container:** Use `podman exec ...` for scripts/tests.
-4.  **Hypermedia First:** Prefer server-side rendering with HTMX (`hx-*` attributes) over client-side JS.
-5.  **Restart on Config Change:** If `pyproject.toml` or `.env` changes, restart the container.
+4.  **Restart on Config Change:** If `pyproject.toml` or `.env` changes, restart the container.
