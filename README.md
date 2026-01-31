@@ -22,39 +22,43 @@ A production-ready template for building "Hybrid" web applications using **FastH
 
 Follow these steps to initialize a new project from this template:
 
-### 1. Clone & Detach
-An obvious way to start is to "Use this template" on Github to create a new repo. 
-However, manually is also fine: clone the repository and reset the git history to start fresh.
+### 1. Clone the Template Branch
+Run this command to clone *only* the `template` branch into a new directory. Replace `my-new-app` with your desired project name.
 
 ```powershell
-# Clone the repository
-git clone <repository-url> my-new-app
+git clone -b template --single-branch https://github.com/shuaiyuancn/2026-web-app-template.git my-new-app
+```
+
+### 2. Detach from the Old Repository
+Navigate into your new folder and remove the `.git` directory. This creates a "clean slate" so your new app has its own history.
+
+```powershell
 cd my-new-app
-
-# Remove old git history and initialize new one
-Remove-Item -Recurse -Force .git
-git init
+Remove-Item -Recurse -Force .git  # PowerShell command to remove the hidden .git folder
+git init                          # Initialize a brand new git repository
 ```
 
-### 2. Personalize
-Update the project metadata to match your new application.
+### 3. Personalize the Project
+Update the project identity:
 
-1.  **`pyproject.toml`**: Update `name` and `description`.
-2.  **`compose.yaml`**: Update `container_name` for `web` and `db` services.
+1.  **`pyproject.toml`:** Change `name = "myapp"` to the project name.
+2.  **`README.md`:** Update the title and description.
+3.  **`compose.yaml`:** Update `container_name` for `web` and `db` services (optional but recommended).
+4.  **`.env`:** Create a `.env` file if it's missing (refer to `.env.example` or just create one with `DATABASE_URL` commented out for local dev).
 
-### 3. Launch Environment
-Initialize the dependencies and start the containers.
+### 4. Launch the Environment
+Initialize the workflow:
 
 ```powershell
-# Install dependencies locally (for editor Intellisense)
-uv sync
-
-# Start the application and database containers
-podman-compose up -d
+uv sync                 # Installs dependencies on Windows (for Intellisense)
+podman-compose up -d    # Builds and starts the Linux containers
 ```
 
-### 4. Verify
-Open [http://localhost:5001](http://localhost:5001) in your browser. You should see the "Hello World" message with the database connection status.
+### 5. Verify
+Open `http://localhost:5001`. You should see the "Hello World" message.
+
+**Ready to Build?**
+Refer to `GEMINI.md` for the complete Agentic Development Workflow.
 
 ## 💻 Development Workflow
 
@@ -65,9 +69,9 @@ Open [http://localhost:5001](http://localhost:5001) in your browser. You should 
 *   **Running Tests**:
     Tests **must** run inside the Linux container.
     ```powershell
-    podman exec -it todo_dev uv run pytest
+    podman exec -it myapp_dev uv run pytest
     ```
-    *(Replace `todo_dev` with your container name if you changed it in `compose.yaml`)*
+    *(Replace `myapp_dev` with your container name if you changed it in `compose.yaml`)*
 
 ## 🌍 Deployment (Vercel)
 

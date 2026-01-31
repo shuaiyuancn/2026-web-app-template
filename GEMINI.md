@@ -19,7 +19,7 @@ This document defines the operational context and workflow for this project. It 
     *   **ORM:** [FastSQL](https://github.com/AnswerDotAI/fastsql) (SQLAlchemy wrapper).
 *   **UI Framework:** Materialize CSS (via CDN).
 *   **Package Manager:** [uv](https://github.com/astral-sh/uv) (Managed via `pyproject.toml` and `uv.lock`).
-*   **Deployment:** Vercel (Serverless).
+*   **Deployment:** Vercel (Serverless) or Railway.
 
 ## 3. Development Guidelines (Lessons Learned)
 
@@ -37,7 +37,9 @@ This document defines the operational context and workflow for this project. It 
     *   **DATABASE_URL:** Must be set in Vercel Project Settings.
     *   **AUTH_SECRET:** Must be set in Vercel Project Settings.
 
-### C. UI & Forms
+### C. Railway & Environment
+
+### D. UI & Forms
 *   **Materialize Select:** Hides the native `<select>` element. Standard HTML5 `required` validation will block submission without feedback.
     *   **Fix:** Do not use `required=True` on `Select` components if using Materialize. Validate on backend.
 
@@ -51,18 +53,18 @@ This document defines the operational context and workflow for this project. It 
 
 ### B. Running the App
 *   **Start:** `podman-compose up -d`
-*   **Logs:** `podman logs -f palpay_dev`
+*   **Logs:** `podman logs -f myapp_dev` (suppose the container name is myapp_dev)
 *   **Access:** Open `http://localhost:5001`.
 
 ### C. Testing
 *   Tests must run **inside** the Linux container.
 *   **Command:** `podman exec palpay_dev uv run pytest`
+*   Use TTD from the beginning.
 
 ## 5. Deployment Checklist (Vercel)
 
 1.  **Push to GitHub.**
 2.  **Vercel Settings:**
-    *   Set `DATABASE_URL` (Remote Postgres, e.g., Supabase/Neon).
     *   Set `AUTH_SECRET` (Random string for session signing).
     *   Set `POSTGRES_URL_NON_POOLING` if applicable.
 3.  **Deploy.**
